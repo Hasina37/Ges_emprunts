@@ -26,21 +26,25 @@ class Etudiant(models.Model):
 from django.db import models
 from django.db.models import Sum
 
+class Categorie(models.Model):
+    nom = models.CharField(max_length=100, unique=True)
+
+    def __str__(self):
+        return self.nom
+
 class Objet(models.Model):
     nom = models.CharField(max_length=100)
     quantite_totale = models.PositiveIntegerField(default=1)
+    categorie = models.ForeignKey(Categorie, on_delete=models.SET_NULL, null=True, blank=True)
 
-    # 🔥 total réellement emprunté (avec quantités)
     def empruntes(self):
         return Emprunt.objects.filter(objet=self, rendu=False).aggregate(
             total=Sum("quantite")
         )["total"] or 0
 
-    # 🔥 disponibles
     def disponibles(self):
         return self.quantite_totale - self.empruntes()
 
-    # compatibilité ancien code
     def quantite_disponible(self):
         return self.disponibles()
 
@@ -48,13 +52,14 @@ class Objet(models.Model):
         return self.disponibles() > 0
 
     def __str__(self):
-        return self.nom
+        return f"{self.nom} ({self.categorie})"
 
 
 # EMPRUNT
 class Emprunt(models.Model):
     etudiant = models.ForeignKey(Etudiant, on_delete=models.CASCADE)
     objet = models.ForeignKey(Objet, on_delete=models.CASCADE)
+    date_retour_prevue = models.DateTimeField(null=True, blank=True)
 
     donne_par = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
     quantite = models.PositiveIntegerField(default=1)
@@ -65,3 +70,30 @@ class Emprunt(models.Model):
 
     def __str__(self):
         return f"{self.etudiant.nom} - {self.objet.nom}"
+    
+class HistoriqueEmprunt(models.Model):
+
+    STATUS_CHOICES = [
+        ("RENDU", "Rendu"),
+        ("NON_RENDU", "Non rendu"),
+    ]
+    emprunt_id = models.IntegerField(null=True, blank=True)
+
+    etudiant = models.CharField(max_length=100)
+    objet = models.CharField(max_length=100)
+
+    donne_par = models.CharField(max_length=100, null=True, blank=True)
+
+    quantite = models.PositiveIntegerField()
+
+    date_emprunt = models.DateTimeField()
+    date_rendu = models.DateTimeField(null=True, blank=True)
+
+    status = models.CharField(
+        max_length=20,
+        choices=STATUS_CHOICES,
+        default="NON_RENDU"
+    )
+
+    action = models.CharField(max_length=50)
+    created_at = models.DateTimeField(auto_now_add=True)

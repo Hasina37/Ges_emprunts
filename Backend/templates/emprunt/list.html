@@ -1,0 +1,368 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Emprunts — GestEmprunt</title>
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --bg: #080c14;
+            --surface: rgba(255,255,255,0.04);
+            --surface-hover: rgba(255,255,255,0.07);
+            --border: rgba(255,255,255,0.08);
+            --accent: #3b82f6;
+            --accent-glow: rgba(59,130,246,0.3);
+            --accent-2: #818cf8;
+            --green: #34d399;
+            --red: #f87171;
+            --text: #f1f5f9;
+            --text-muted: #64748b;
+        }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            width: 600px; height: 600px;
+            background: radial-gradient(circle, rgba(52,211,153,0.06) 0%, transparent 70%);
+            bottom: -100px; left: -100px;
+            border-radius: 50%;
+            pointer-events: none;
+        }
+
+        .topbar {
+            position: sticky; top: 0; z-index: 50;
+            background: rgba(8,12,20,0.9);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border);
+            padding: 0 32px;
+            height: 64px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .logo { display: flex; align-items: center; gap: 10px; text-decoration: none; color: var(--text); }
+        .logo-icon { width: 36px; height: 36px; background: linear-gradient(135deg, var(--accent), var(--accent-2)); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 17px; }
+        .logo-text { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 17px; letter-spacing: -0.5px; }
+
+        main { max-width: 1100px; margin: 0 auto; padding: 48px 24px; }
+
+        .page-header {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            margin-bottom: 36px;
+            flex-wrap: wrap;
+            gap: 16px;
+            animation: fadeUp 0.4s ease both;
+        }
+        .page-header h1 {
+            font-family: 'Syne', sans-serif;
+            font-size: 28px;
+            font-weight: 800;
+            letter-spacing: -1px;
+        }
+        .page-header .badge {
+            font-size: 13px; color: var(--text-muted); margin-top: 4px;
+        }
+
+        .btn-primary {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: linear-gradient(135deg, var(--accent), var(--accent-2));
+            border: none;
+            border-radius: 10px;
+            padding: 11px 20px;
+            color: #fff;
+            font-family: 'Syne', sans-serif;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            text-decoration: none;
+            transition: opacity 0.2s, transform 0.15s, box-shadow 0.2s;
+            box-shadow: 0 4px 16px var(--accent-glow);
+        }
+        .btn-primary:hover { opacity: 0.9; transform: translateY(-1px); box-shadow: 0 8px 24px var(--accent-glow); }
+
+        .table-wrapper {
+            background: rgba(15,23,42,0.6);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            overflow: hidden;
+            animation: fadeUp 0.5s ease 0.1s both;
+        }
+        table { width: 100%; border-collapse: collapse; }
+        thead tr {
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+        }
+        th {
+            padding: 14px 20px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            color: var(--text-muted);
+            text-align: left;
+            white-space: nowrap;
+        }
+        tbody tr {
+            border-bottom: 1px solid var(--border);
+            transition: background 0.15s;
+        }
+        tbody tr:last-child { border-bottom: none; }
+        tbody tr:hover { background: var(--surface-hover); }
+        td {
+            padding: 16px 20px;
+            font-size: 14px;
+            vertical-align: middle;
+            color: #0a0a0aff
+        }
+
+        .qty-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(59,130,246,0.12);
+            border: 1px solid rgba(59,130,246,0.2);
+            color: var(--accent);
+            border-radius: 6px;
+            padding: 3px 10px;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .date-text { color: var(--text-muted); font-size: 13px; }
+        .user-text { color: var(--text-muted); font-size: 13px; }
+
+        .actions { display: flex; align-items: center; gap: 6px; }
+        .action-btn {
+            display: inline-flex; align-items: center; gap: 5px;
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 500;
+            text-decoration: none;
+            transition: all 0.15s;
+            border: 1px solid transparent;
+        }
+        .action-btn.return { background: rgba(52,211,153,0.1); border-color: rgba(52,211,153,0.2); color: var(--green); }
+        .action-btn.return:hover { background: rgba(52,211,153,0.18); }
+        .action-btn.edit   { background: rgba(59,130,246,0.1); border-color: rgba(59,130,246,0.2); color: var(--accent); }
+        .action-btn.edit:hover { background: rgba(59,130,246,0.18); }
+        .action-btn.delete { background: rgba(248,113,113,0.1); border-color: rgba(248,113,113,0.2); color: var(--red); }
+        .action-btn.delete:hover { background: rgba(248,113,113,0.18); }
+
+        .back-link {
+            display: inline-flex; align-items: center; gap: 6px;
+            color: var(--text-muted); font-size: 13px; text-decoration: none;
+            margin-top: 28px;
+            transition: color 0.2s;
+        }
+        .back-link:hover { color: var(--text); }
+
+        .empty-state {
+            text-align: center;
+            padding: 64px 24px;
+            color: var(--text-muted);
+        }
+        .empty-state .icon { font-size: 48px; margin-bottom: 16px; opacity: 0.4; }
+
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(12px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Styles pour la recherche dynamique (ne modifie pas le reste) */
+        .dynamic-search-wrapper {
+            margin-bottom: 24px;
+            display: flex;
+            gap: 12px;
+            align-items: flex-end;
+        }
+        .dynamic-search-wrapper .search-group {
+            flex: 1;
+        }
+        .dynamic-search-wrapper label {
+            display: block;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+        }
+        .dynamic-search-wrapper input {
+            width: 100%;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 10px 14px;
+            color: var(--text);
+            font-family: inherit;
+            font-size: 14px;
+        }
+        .dynamic-search-wrapper input:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 2px var(--accent-glow);
+        }
+        .reset-search-btn {
+            background: transparent;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 0 20px;
+            height: 42px;
+            display: inline-flex;
+            align-items: center;
+            color: var(--text-muted);
+            font-size: 13px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .reset-search-btn:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+    </style>
+</head>
+<body>
+
+<header class="topbar">
+    <a href="{% url 'dashboard' %}" class="logo">
+        <div class="logo-icon">📦</div>
+        <div class="logo-text">GestEmprunt</div>
+    </a>
+</header>
+
+<main>
+    <div class="page-header">
+        <div>
+            <h1>📋 Emprunts en cours</h1>
+            <div class="badge">Suivi des objets empruntés</div>
+        </div>
+        <a href="{% url 'emprunt_create' %}" class="btn-primary">➕ Nouvel emprunt</a>
+    </div>
+
+    <!-- Barre de recherche dynamique (filtrage instantané côté client) -->
+    <div class="dynamic-search-wrapper">
+        <div class="search-group">
+            <label>🔍 Rechercher en temps réel</label>
+            <input type="text" id="dynamicSearch" placeholder="Nom de l'étudiant ou objet..." autocomplete="off">
+        </div>
+        <button class="reset-search-btn" id="resetSearch">Réinitialiser</button>
+    </div>
+
+    <div class="table-wrapper">
+        <table id="empruntTable">
+            <thead>
+                <tr>
+                    <th>Étudiant</th>
+                    <th>Objet</th>
+                    <th>Quantité</th>
+                    <th>Date emprunt</th>
+                    <th>Donné par</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="empruntTableBody">
+                {% for e in emprunts %}
+                <tr class="emprunt-row">
+                    <td><b>{{ e.etudiant.nom }}</b></td>
+                    <td>{{ e.objet.nom }}</td>
+                    <td><span class="qty-badge">× {{ e.quantite }}</span></td>
+                    <td class="date-text">{{ e.date_emprunt|date:"d/m/Y H:i" }}</td>
+                    <td class="user-text">
+                        {% if e.donne_par %}Mr {{ e.donne_par.username }}{% else %}—{% endif %}
+                    </td>
+                    <td>
+                        <div class="actions">
+                            <a href="{% url 'emprunt_rendre' e.id %}" class="action-btn return">✔ Rendre</a>
+                            <a href="{% url 'emprunt_edit' e.id %}" class="action-btn edit">✏ Modifier</a>
+                            <a href="{% url 'emprunt_delete' e.id %}" class="action-btn delete">✕ Supprimer</a>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr class="empty-default-row">
+                    <td colspan="6">
+                        <div class="empty-state">
+                            <div class="icon">📭</div>
+                            <p>Aucun emprunt en cours</p>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <a href="{% url 'dashboard' %}" class="back-link">← Retour au dashboard</a>
+</main>
+
+<script>
+    (function() {
+        const searchInput = document.getElementById('dynamicSearch');
+        const resetBtn = document.getElementById('resetSearch');
+        const tbody = document.getElementById('empruntTableBody');
+        const rows = tbody.querySelectorAll('.emprunt-row');
+        const emptyDefault = tbody.querySelector('.empty-default-row');
+
+        function filterTable() {
+            const term = searchInput.value.trim().toLowerCase();
+            let hasVisible = false;
+
+            rows.forEach(row => {
+                // Récupérer le texte de l'étudiant (première colonne) et de l'objet (deuxième colonne)
+                const etudiant = row.cells[0]?.innerText.toLowerCase() || '';
+                const objet = row.cells[1]?.innerText.toLowerCase() || '';
+                const matches = etudiant.includes(term) || objet.includes(term);
+                row.style.display = matches ? '' : 'none';
+                if (matches) hasVisible = true;
+            });
+
+            // Gérer l'affichage d'un message "aucun résultat"
+            if (rows.length === 0) {
+                // S'il n'y a aucune ligne (aucun emprunt), on laisse le message par défaut
+                if (emptyDefault) emptyDefault.style.display = '';
+                return;
+            }
+
+            // Supprimer un éventuel message "aucun résultat" ajouté dynamiquement
+            const existingDynamicEmpty = tbody.querySelector('.dynamic-empty-row');
+            if (existingDynamicEmpty) existingDynamicEmpty.remove();
+
+            if (!hasVisible) {
+                // Créer une ligne temporaire pour indiquer qu'aucun résultat ne correspond
+                const emptyRow = document.createElement('tr');
+                emptyRow.className = 'dynamic-empty-row';
+                emptyRow.innerHTML = `<td colspan="6"><div class="empty-state"><div class="icon">🔍</div><p>Aucun emprunt ne correspond à votre recherche</p></div></td>`;
+                tbody.appendChild(emptyRow);
+            }
+
+            // Si le message par défaut "Aucun emprunt" est présent, on le cache si des lignes existent
+            if (emptyDefault) {
+                emptyDefault.style.display = (rows.length > 0 && !hasVisible) ? 'none' : '';
+            }
+        }
+
+        searchInput.addEventListener('input', filterTable);
+        resetBtn.addEventListener('click', function() {
+            searchInput.value = '';
+            filterTable();
+        });
+    })();
+</script>
+
+</body>
+</html>

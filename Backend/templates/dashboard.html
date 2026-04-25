@@ -7,7 +7,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <style>
-        /* Vos styles d'origine (rien n'a été modifié) */
         *, *::before, *::after {
             box-sizing: border-box;
             margin: 0;
@@ -519,7 +518,6 @@
         <p class="page-subtitle">Analytique, emprunts actifs & gestion centralisée — vue d’ensemble stratégique.</p>
     </div>
 
-    <!-- KPI CARDS -->
     <div class="kpi-grid">
         <div class="kpi-card">
             <div class="kpi-header">
@@ -564,8 +562,6 @@
             <div class="kpi-trend" id="retour-pourcentage">---</div>
         </div>
     </div>
-
-    <!-- Modules de gestion -->
     <div class="nav-section">
         <div class="section-title">
             <span>⚡</span> Modules de gestion
@@ -598,8 +594,6 @@
             </a>
         </div>
     </div>
-
-    <!-- Graphique & top objet -->
     <div class="analytics-grid">
         <div class="chart-card">
             <div class="card-header">
@@ -634,8 +628,6 @@
             </div>
         </div>
     </div>
-
-    <!-- Derniers emprunts -->
     <div class="recent-section">
         <div class="recent-header">
             <div class="recent-title">🕒 Dernières activités · emprunts récents</div>
@@ -678,7 +670,6 @@
         let rendu = totalEmprunts - nonRendu;
         if (rendu < 0) rendu = 0;
 
-        // 1. Correction de la carte "Taux de retour" via JavaScript
         const valeurElem = document.getElementById('retour-valeur');
         const pourcentElem = document.getElementById('retour-pourcentage');
         if (valeurElem && pourcentElem) {
@@ -692,7 +683,6 @@
             }
         }
 
-        // 2. Graphique du statut des emprunts (inchangé)
         const ctx = document.getElementById('statusChart')?.getContext('2d');
         if (ctx) {
             new Chart(ctx, {

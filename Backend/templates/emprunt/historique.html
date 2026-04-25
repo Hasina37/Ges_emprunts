@@ -1,0 +1,393 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Historique — GestEmprunt</title>
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --bg: #080c14;
+            --surface: rgba(255,255,255,0.04);
+            --surface-hover: rgba(255,255,255,0.07);
+            --border: rgba(255,255,255,0.08);
+            --accent: #3b82f6;
+            --accent-glow: rgba(59,130,246,0.3);
+            --accent-2: #818cf8;
+            --green: #34d399;
+            --orange: #f97316;
+            --text: #f1f5f9;
+            --text-muted: #64748b;
+        }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            width: 600px; height: 600px;
+            background: radial-gradient(circle, rgba(129,140,248,0.06) 0%, transparent 70%);
+            bottom: -100px; right: -100px;
+            border-radius: 50%;
+            pointer-events: none;
+        }
+
+        .topbar {
+            position: sticky; top: 0; z-index: 50;
+            background: rgba(8,12,20,0.9);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border);
+            padding: 0 32px;
+            height: 64px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .logo { display: flex; align-items: center; gap: 10px; text-decoration: none; color: var(--text); }
+        .logo-icon { width: 36px; height: 36px; background: linear-gradient(135deg, var(--accent), var(--accent-2)); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 17px; }
+        .logo-text { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 17px; letter-spacing: -0.5px; }
+
+        main { max-width: 1200px; margin: 0 auto; padding: 48px 24px; }
+
+        .page-header {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            margin-bottom: 36px;
+            flex-wrap: wrap;
+            gap: 16px;
+            animation: fadeUp 0.4s ease both;
+        }
+        .page-header h1 {
+            font-family: 'Syne', sans-serif;
+            font-size: 28px;
+            font-weight: 800;
+            letter-spacing: -1px;
+        }
+        .page-header .badge {
+            font-size: 13px; color: var(--text-muted); margin-top: 4px;
+        }
+
+        /* Barre de recherche (styles inchangés) */
+        .search-bar {
+            background: rgba(15,23,42,0.6);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 16px 20px;
+            margin-bottom: 28px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            align-items: flex-end;
+            animation: fadeUp 0.4s ease 0.05s both;
+        }
+        .search-group {
+            flex: 1;
+            min-width: 160px;
+        }
+        .search-group label {
+            display: block;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+            font-weight: 600;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+        }
+        .search-group input, .search-group select {
+            width: 100%;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 10px 14px;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 14px;
+            color: var(--text);
+            transition: 0.2s;
+        }
+        .search-group input:focus, .search-group select:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 2px var(--accent-glow);
+        }
+        .btn-reset {
+            background: transparent;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 0 20px;
+            height: 42px;
+            font-family: 'DM Sans', sans-serif;
+            font-weight: 500;
+            font-size: 13px;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .btn-reset:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        /* Table */
+        .table-wrapper {
+            background: rgba(15,23,42,0.6);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            overflow-x: auto;
+            animation: fadeUp 0.5s ease 0.1s both;
+        }
+        table { width: 100%; border-collapse: collapse; min-width: 800px; }
+        thead tr {
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+        }
+        th {
+            padding: 14px 20px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            color: var(--text-muted);
+            text-align: left;
+        }
+        tbody tr {
+            border-bottom: 1px solid var(--border);
+            transition: background 0.15s;
+        }
+        tbody tr:last-child { border-bottom: none; }
+        tbody tr:hover { background: var(--surface-hover); }
+        td {
+            padding: 16px 20px;
+            font-size: 14px;
+            vertical-align: middle;
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 12px;
+            border-radius: 40px;
+            font-size: 12px;
+            font-weight: 600;
+            width: fit-content;
+        }
+        .status-badge.rendu {
+            background: rgba(52,211,153,0.12);
+            color: var(--green);
+            border: 1px solid rgba(52,211,153,0.2);
+        }
+        .status-badge.non-rendu {
+            background: rgba(249,115,22,0.12);
+            color: var(--orange);
+            border: 1px solid rgba(249,115,22,0.2);
+        }
+
+        .qty-badge {
+            display: inline-flex;
+            background: rgba(59,130,246,0.1);
+            border: 1px solid rgba(59,130,246,0.2);
+            padding: 3px 10px;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 13px;
+            color: var(--accent);
+        }
+
+        .date-text { color: var(--text-muted); font-size: 13px; }
+
+        .empty-state {
+            text-align: center;
+            padding: 64px 24px;
+            color: var(--text-muted);
+        }
+        .empty-state .icon { font-size: 48px; margin-bottom: 16px; opacity: 0.4; }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            color: var(--text-muted);
+            font-size: 13px;
+            text-decoration: none;
+            margin-top: 28px;
+            transition: color 0.2s;
+        }
+        .back-link:hover { color: var(--text); }
+
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(12px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+
+<header class="topbar">
+    <a href="{% url 'dashboard' %}" class="logo">
+        <div class="logo-icon">📦</div>
+        <div class="logo-text">GestEmprunt</div>
+    </a>
+</header>
+
+<main>
+    <div class="page-header">
+        <div>
+            <h1>📜 Historique des emprunts</h1>
+            <div class="badge">Toutes les transactions passées</div>
+        </div>
+    </div>
+
+    <!-- Barre de recherche dynamique (filtrage instantané) -->
+    <div class="search-bar">
+        <div class="search-group">
+            <label>🔍 Rechercher (étudiant / objet)</label>
+            <input type="text" id="searchText" placeholder="Ex: Nantenaina, HDMI...">
+        </div>
+        <div class="search-group">
+            <label>📌 Statut</label>
+            <select id="searchStatus">
+                <option value="">Tous</option>
+                <option value="rendu">Rendu</option>
+                <option value="non">Non rendu</option>
+            </select>
+        </div>
+        <div>
+            <label>&nbsp;</label>
+            <div style="display: flex; gap: 8px;">
+                <button id="resetFilters" class="btn-reset">Réinitialiser</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="table-wrapper">
+        <table id="historiqueTable">
+            <thead>
+                <tr>
+                    <th>Étudiant</th>
+                    <th>Objet</th>
+                    <th>Quantité</th>
+                    <th>Date emprunt</th>
+                    <th>Date rendu</th>
+                    <th>Donné par</th>
+                    <th>Statut</th>
+                </tr>
+            </thead>
+            <tbody id="historiqueTableBody">
+                {% for h in historiques %}
+                <tr class="historique-row" data-statut="{% if h.status == 'RENDU' %}rendu{% else %}non{% endif %}">
+                    <td><b>{{ h.etudiant }}</b></td>
+                    <td>{{ h.objet }}</td>
+                    <td><span class="qty-badge">× {{ h.quantite }}</span></td>
+                    <td class="date-text">{{ h.date_emprunt|date:"d/m/Y H:i" }}</td>
+                    <td class="date-text">
+                        {% if h.date_rendu %}
+                            {{ h.date_rendu|date:"d/m/Y H:i" }}
+                        {% else %}
+                            —
+                        {% endif %}
+                    </td>
+                    <td class="date-text">
+                        {% if h.donne_par %}
+                            Mr {{ h.donne_par }}
+                        {% else %}
+                            —
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if h.status == "RENDU" %}
+                            <span class="status-badge rendu">✓ Rendu</span>
+                        {% else %}
+                            <span class="status-badge non-rendu">⏳ Non rendu</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr class="empty-default-row">
+                    <td colspan="7">
+                        <div class="empty-state">
+                            <div class="icon">📭</div>
+                            <p>Aucun historique d'emprunt trouvé</p>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <a href="{% url 'dashboard' %}" class="back-link">← Retour au dashboard</a>
+</main>
+
+<script>
+    (function() {
+        const searchTextInput = document.getElementById('searchText');
+        const searchStatusSelect = document.getElementById('searchStatus');
+        const resetBtn = document.getElementById('resetFilters');
+        const tbody = document.getElementById('historiqueTableBody');
+        const rows = Array.from(tbody.querySelectorAll('.historique-row'));
+        const emptyDefaultRow = tbody.querySelector('.empty-default-row');
+
+        function filterRows() {
+            const textTerm = searchTextInput.value.trim().toLowerCase();
+            const statusTerm = searchStatusSelect.value;
+
+            let hasVisible = false;
+
+            rows.forEach(row => {
+                const etudiant = row.cells[0]?.innerText.toLowerCase() || '';
+                const objet = row.cells[1]?.innerText.toLowerCase() || '';
+                const matchesText = textTerm === '' || etudiant.includes(textTerm) || objet.includes(textTerm);
+                
+                let matchesStatus = true;
+                if (statusTerm !== '') {
+                    const rowStatus = row.getAttribute('data-statut');
+                    matchesStatus = (rowStatus === statusTerm);
+                }
+                
+                const visible = matchesText && matchesStatus;
+                row.style.display = visible ? '' : 'none';
+                if (visible) hasVisible = true;
+            });
+
+            // Supprimer un éventuel message "aucun résultat" dynamique précédent
+            const existingDynamicEmpty = tbody.querySelector('.dynamic-empty-row');
+            if (existingDynamicEmpty) existingDynamicEmpty.remove();
+
+            if (!hasVisible && rows.length > 0) {
+                const emptyRow = document.createElement('tr');
+                emptyRow.className = 'dynamic-empty-row';
+                emptyRow.innerHTML = `<td colspan="7"><div class="empty-state"><div class="icon">🔍</div><p>Aucun historique ne correspond à vos critères</p></div></td>`;
+                tbody.appendChild(emptyRow);
+            }
+
+            // Gérer le cas où il n'y a aucune ligne de base (aucun historique)
+            if (emptyDefaultRow) {
+                if (rows.length === 0) {
+                    emptyDefaultRow.style.display = '';
+                } else {
+                    emptyDefaultRow.style.display = 'none';
+                }
+            }
+        }
+
+        searchTextInput.addEventListener('input', filterRows);
+        searchStatusSelect.addEventListener('change', filterRows);
+        resetBtn.addEventListener('click', function() {
+            searchTextInput.value = '';
+            searchStatusSelect.value = '';
+            filterRows();
+        });
+    })();
+</script>
+
+</body>
+</html>

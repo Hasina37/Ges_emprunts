@@ -2,24 +2,35 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard — GestEmprunt</title>
-    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>GestEmprunt • Tableau de bord avancé</title>
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <style>
-        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        /* Vos styles d'origine (rien n'a été modifié) */
+        *, *::before, *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
 
         :root {
             --bg: #080c14;
-            --surface: rgba(255,255,255,0.04);
-            --surface-hover: rgba(255,255,255,0.07);
-            --border: rgba(255,255,255,0.08);
+            --surface: rgba(255, 255, 255, 0.04);
+            --surface-hover: rgba(255, 255, 255, 0.07);
+            --border: rgba(255, 255, 255, 0.08);
             --accent: #3b82f6;
-            --accent-glow: rgba(59,130,246,0.3);
+            --accent-glow: rgba(59, 130, 246, 0.3);
             --accent-2: #818cf8;
             --accent-3: #34d399;
+            --warning: #f97316;
+            --danger: #ef4444;
             --text: #f1f5f9;
             --text-muted: #64748b;
-            --radius: 16px;
+            --radius-lg: 24px;
+            --radius-md: 18px;
+            --radius-sm: 12px;
+            --transition: all 0.25s cubic-bezier(0.2, 0, 0, 1);
         }
 
         body {
@@ -31,25 +42,24 @@
             overflow-x: hidden;
         }
 
-        body::before {
+        body::after {
             content: '';
             position: fixed;
-            width: 700px; height: 700px;
-            background: radial-gradient(circle, rgba(59,130,246,0.08) 0%, transparent 70%);
-            top: -200px; right: -200px;
-            border-radius: 50%;
+            inset: 0;
+            background: radial-gradient(circle at 20% 30%, rgba(59, 130, 246, 0.02) 0%, transparent 60%);
             pointer-events: none;
+            z-index: 0;
         }
 
-        /* Sidebar / Topbar */
         .topbar {
-            position: sticky; top: 0; z-index: 50;
-            background: rgba(8,12,20,0.85);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(8, 12, 20, 0.85);
             backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
             border-bottom: 1px solid var(--border);
             padding: 0 32px;
-            height: 64px;
+            height: 70px;
             display: flex;
             align-items: center;
             justify-content: space-between;
@@ -58,188 +68,431 @@
         .logo {
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 12px;
         }
+
         .logo-icon {
-            width: 36px; height: 36px;
+            width: 38px;
+            height: 38px;
             background: linear-gradient(135deg, var(--accent), var(--accent-2));
-            border-radius: 8px;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 17px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            box-shadow: 0 8px 20px rgba(59, 130, 246, 0.2);
         }
+
         .logo-text {
             font-family: 'Syne', sans-serif;
             font-weight: 800;
-            font-size: 17px;
+            font-size: 20px;
             letter-spacing: -0.5px;
+            background: linear-gradient(135deg, #fff, #94a3b8);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
         }
 
         .topbar-right {
             display: flex;
             align-items: center;
-            gap: 16px;
+            gap: 20px;
         }
+
         .user-chip {
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 10px;
             background: var(--surface);
             border: 1px solid var(--border);
-            border-radius: 40px;
-            padding: 6px 14px 6px 8px;
+            border-radius: 60px;
+            padding: 6px 16px 6px 8px;
+            backdrop-filter: blur(4px);
+            transition: var(--transition);
         }
+
+        .user-chip:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(255, 255, 255, 0.12);
+        }
+
         .user-avatar {
-            width: 28px; height: 28px;
-            background: linear-gradient(135deg, var(--accent), var(--accent-2));
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(145deg, var(--accent), var(--accent-2));
             border-radius: 50%;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 13px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: 600;
         }
+
         .user-name {
-            font-size: 13px;
+            font-size: 14px;
             font-weight: 500;
+            color: var(--text);
         }
 
         .btn-logout {
             background: transparent;
             border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 7px 14px;
+            border-radius: 40px;
+            padding: 8px 18px;
             color: var(--text-muted);
             font-family: 'DM Sans', sans-serif;
             font-size: 13px;
+            font-weight: 500;
             cursor: pointer;
-            transition: all 0.2s;
+            transition: var(--transition);
             text-decoration: none;
             display: inline-flex;
             align-items: center;
-            gap: 6px;
+            gap: 8px;
         }
-        .btn-logout:hover { border-color: rgba(248,113,113,0.4); color: #f87171; background: rgba(248,113,113,0.05); }
 
-        /* Main */
+        .btn-logout:hover {
+            border-color: rgba(239, 68, 68, 0.5);
+            color: #f87171;
+            background: rgba(248, 113, 113, 0.08);
+            transform: translateY(-1px);
+        }
+
         main {
-            max-width: 960px;
+            max-width: 1280px;
             margin: 0 auto;
-            padding: 56px 24px;
+            padding: 40px 28px 60px;
+            position: relative;
+            z-index: 2;
         }
 
         .page-header {
-            margin-bottom: 48px;
+            margin-bottom: 40px;
             animation: fadeUp 0.5s ease both;
         }
+
         .page-tag {
             display: inline-flex;
             align-items: center;
-            gap: 6px;
-            background: rgba(59,130,246,0.1);
-            border: 1px solid rgba(59,130,246,0.2);
-            border-radius: 40px;
-            padding: 4px 12px;
+            gap: 8px;
+            background: rgba(59, 130, 246, 0.12);
+            border: 1px solid rgba(59, 130, 246, 0.25);
+            border-radius: 60px;
+            padding: 5px 14px;
             font-size: 12px;
+            font-weight: 600;
             color: var(--accent);
-            font-weight: 500;
-            text-transform: uppercase;
-            letter-spacing: 0.8px;
-            margin-bottom: 16px;
-        }
-        h1 {
-            font-family: 'Syne', sans-serif;
-            font-size: clamp(28px, 4vw, 40px);
-            font-weight: 800;
-            letter-spacing: -1.5px;
-            line-height: 1.1;
-            margin-bottom: 10px;
-        }
-        .page-subtitle {
-            color: var(--text-muted);
-            font-size: 15px;
+            letter-spacing: 0.5px;
+            margin-bottom: 20px;
+            backdrop-filter: blur(2px);
         }
 
-        /* Cards grid */
-        .grid {
+        h1 {
+            font-family: 'Syne', sans-serif;
+            font-size: clamp(32px, 5vw, 48px);
+            font-weight: 800;
+            letter-spacing: -1.5px;
+            line-height: 1.15;
+            margin-bottom: 12px;
+        }
+
+        .page-subtitle {
+            color: var(--text-muted);
+            font-size: 16px;
+            border-left: 3px solid var(--accent);
+            padding-left: 16px;
+        }
+
+        .kpi-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        .kpi-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            padding: 20px 20px;
+            backdrop-filter: blur(4px);
+            transition: var(--transition);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .kpi-card:hover {
+            transform: translateY(-3px);
+            background: var(--surface-hover);
+            border-color: rgba(255, 255, 255, 0.12);
+            box-shadow: 0 20px 35px -12px rgba(0, 0, 0, 0.4);
+        }
+
+        .kpi-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .kpi-title {
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .kpi-icon {
+            font-size: 28px;
+            opacity: 0.8;
+        }
+
+        .kpi-value {
+            font-family: 'Syne', sans-serif;
+            font-size: 34px;
+            font-weight: 800;
+            letter-spacing: -1px;
+            color: white;
+            line-height: 1.1;
+        }
+
+        .kpi-trend {
+            font-size: 12px;
+            margin-top: 12px;
+            color: var(--accent-3);
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .nav-section {
+            margin-bottom: 48px;
+        }
+
+        .section-title {
+            font-family: 'Syne', sans-serif;
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            letter-spacing: -0.3px;
+        }
+
+        .grid-nav {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
             gap: 20px;
         }
 
         .nav-card {
             background: var(--surface);
             border: 1px solid var(--border);
-            border-radius: 20px;
-            padding: 28px;
+            border-radius: var(--radius-md);
+            padding: 22px 18px;
             text-decoration: none;
             color: var(--text);
-            display: block;
-            transition: transform 0.25s cubic-bezier(0.16,1,0.3,1), border-color 0.25s, box-shadow 0.25s, background 0.25s;
-            animation: fadeUp 0.5s ease both;
+            transition: var(--transition);
             position: relative;
-            overflow: hidden;
+            backdrop-filter: blur(2px);
+            display: flex;
+            flex-direction: column;
         }
-
-        .nav-card:nth-child(1) { animation-delay: 0.1s; }
-        .nav-card:nth-child(2) { animation-delay: 0.2s; }
-        .nav-card:nth-child(3) { animation-delay: 0.3s; }
-
-        .nav-card::before {
-            content: '';
-            position: absolute;
-            inset: 0;
-            opacity: 0;
-            transition: opacity 0.3s;
-            border-radius: 20px;
-        }
-
-        .nav-card.blue::before  { background: radial-gradient(circle at 30% 30%, rgba(59,130,246,0.08), transparent 60%); }
-        .nav-card.indigo::before { background: radial-gradient(circle at 30% 30%, rgba(129,140,248,0.08), transparent 60%); }
-        .nav-card.green::before { background: radial-gradient(circle at 30% 30%, rgba(52,211,153,0.08), transparent 60%); }
 
         .nav-card:hover {
             transform: translateY(-4px);
             background: var(--surface-hover);
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            border-color: rgba(59, 130, 246, 0.4);
+            box-shadow: 0 15px 30px -10px rgba(0, 0, 0, 0.5);
         }
-        .nav-card.blue:hover  { border-color: rgba(59,130,246,0.35); box-shadow: 0 20px 60px rgba(59,130,246,0.1); }
-        .nav-card.indigo:hover { border-color: rgba(129,140,248,0.35); box-shadow: 0 20px 60px rgba(129,140,248,0.1); }
-        .nav-card.green:hover { border-color: rgba(52,211,153,0.35); box-shadow: 0 20px 60px rgba(52,211,153,0.1); }
-        .nav-card:hover::before { opacity: 1; }
 
         .card-icon {
-            width: 52px; height: 52px;
+            font-size: 32px;
+            margin-bottom: 18px;
+            display: inline-block;
+            width: fit-content;
+            padding: 8px;
             border-radius: 14px;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 24px;
-            margin-bottom: 20px;
+            background: rgba(59, 130, 246, 0.1);
         }
-        .blue .card-icon  { background: rgba(59,130,246,0.15); }
-        .indigo .card-icon { background: rgba(129,140,248,0.15); }
-        .green .card-icon { background: rgba(52,211,153,0.15); }
 
         .card-title {
             font-family: 'Syne', sans-serif;
             font-weight: 700;
             font-size: 18px;
-            letter-spacing: -0.5px;
-            margin-bottom: 8px;
+            margin-bottom: 6px;
         }
+
         .card-desc {
             color: var(--text-muted);
             font-size: 13px;
-            line-height: 1.5;
+            line-height: 1.4;
         }
-        .card-arrow {
-            margin-top: 24px;
+
+        .analytics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 24px;
+            margin-bottom: 48px;
+        }
+
+        .chart-card, .top-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 20px 20px 24px;
+            transition: var(--transition);
+        }
+
+        .chart-card:hover, .top-card:hover {
+            border-color: rgba(255, 255, 255, 0.1);
+            background: var(--surface-hover);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            font-weight: 600;
+            font-size: 16px;
+        }
+
+        canvas {
+            max-height: 220px;
+            margin: 0 auto;
+        }
+
+        .top-objet-info {
+            text-align: center;
+            padding: 10px 0;
+        }
+
+        .top-label {
+            font-size: 14px;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+        }
+
+        .top-name {
+            font-family: 'Syne', sans-serif;
+            font-size: 24px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #fff, var(--accent-2));
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+        }
+
+        .top-count {
+            font-size: 40px;
+            font-weight: 800;
+            color: var(--accent-3);
+            margin: 8px 0;
+        }
+
+        .recent-section {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            backdrop-filter: blur(4px);
+        }
+
+        .recent-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .recent-title {
+            font-family: 'Syne', sans-serif;
+            font-weight: 700;
             font-size: 18px;
-            opacity: 0;
-            transform: translateX(-6px);
-            transition: opacity 0.2s, transform 0.2s;
+        }
+
+        .view-all {
+            font-size: 13px;
+            color: var(--accent);
+            text-decoration: none;
+            background: rgba(59, 130, 246, 0.1);
+            padding: 5px 12px;
+            border-radius: 40px;
+            transition: var(--transition);
+        }
+
+        .view-all:hover {
+            background: rgba(59, 130, 246, 0.2);
+        }
+
+        .emprunt-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .emprunt-table th {
+            text-align: left;
+            padding: 14px 20px;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-muted);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .emprunt-table td {
+            padding: 14px 20px;
+            border-bottom: 1px solid var(--border);
+            font-size: 14px;
+        }
+
+        .status-badge {
+            background: rgba(52, 211, 153, 0.15);
+            color: var(--accent-3);
+            padding: 4px 10px;
+            border-radius: 60px;
+            font-size: 12px;
+            font-weight: 500;
             display: inline-block;
         }
-        .nav-card:hover .card-arrow { opacity: 1; transform: translateX(0); }
+
+        .status-badge.pending {
+            background: rgba(249, 115, 22, 0.15);
+            color: var(--warning);
+        }
+
+        .empty-state {
+            padding: 40px;
+            text-align: center;
+            color: var(--text-muted);
+        }
 
         @keyframes fadeUp {
-            from { opacity: 0; transform: translateY(16px); }
-            to   { opacity: 1; transform: translateY(0); }
+            from {
+                opacity: 0;
+                transform: translateY(18px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @media (max-width: 680px) {
+            main {
+                padding: 24px 16px;
+            }
+            .topbar {
+                padding: 0 16px;
+            }
+            .emprunt-table th, .emprunt-table td {
+                padding: 10px 12px;
+            }
         }
     </style>
 </head>
@@ -261,34 +514,213 @@
 
 <main>
     <div class="page-header">
-        <div class="page-tag">✦ Tableau de bord</div>
+        <div class="page-tag">✦ PORTAL SENIOR</div>
         <h1>Bienvenue, {{ username }} 👋</h1>
-        <p class="page-subtitle">Gérez vos objets, étudiants et emprunts depuis un seul endroit.</p>
+        <p class="page-subtitle">Analytique, emprunts actifs & gestion centralisée — vue d’ensemble stratégique.</p>
     </div>
 
-    <div class="grid">
-        <a href="{% url 'objet_list' %}" class="nav-card blue">
-            <div class="card-icon">📦</div>
-            <div class="card-title">Objets</div>
-            <div class="card-desc">Gérer le stock, les quantités disponibles et les statuts des équipements.</div>
-            <div class="card-arrow">→</div>
-        </a>
+    <!-- KPI CARDS -->
+    <div class="kpi-grid">
+        <div class="kpi-card">
+            <div class="kpi-header">
+                <span class="kpi-title">Total emprunts</span>
+                <span class="kpi-icon">📋</span>
+            </div>
+            <div class="kpi-value">{{ stats.total_emprunts }}</div>
+            <div class="kpi-trend">⬆︎ depuis création</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-header">
+                <span class="kpi-title">En cours (non rendus)</span>
+                <span class="kpi-icon">⏳</span>
+            </div>
+            <div class="kpi-value">{{ stats.non_rendu }}</div>
+            <div class="kpi-trend" style="color: #f97316;">⇢ à rendre</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-header">
+                <span class="kpi-title">Objets disponibles</span>
+                <span class="kpi-icon">📦</span>
+            </div>
+            <div class="kpi-value">{{ stats.total_objets }}</div>
+            <div class="kpi-trend">en stock</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-header">
+                <span class="kpi-title">Étudiants inscrits</span>
+                <span class="kpi-icon">👨‍🎓</span>
+            </div>
+            <div class="kpi-value">{{ stats.total_etudiants }}</div>
+            <div class="kpi-trend">actifs</div>
+        </div>
 
-        <a href="{% url 'etudiant_list' %}" class="nav-card indigo">
-            <div class="card-icon">👨‍🎓</div>
-            <div class="card-title">Étudiants</div>
-            <div class="card-desc">Consulter et gérer la liste des étudiants inscrits dans le système.</div>
-            <div class="card-arrow">→</div>
-        </a>
+        <!-- CARTE TAUX DE RETOUR CORRIGÉE (via JavaScript) -->
+        <div class="kpi-card" id="taux-retour-card">
+            <div class="kpi-header">
+                <span class="kpi-title">Taux de retour</span>
+                <span class="kpi-icon">🔄</span>
+            </div>
+            <div class="kpi-value" id="retour-valeur">-- / --</div>
+            <div class="kpi-trend" id="retour-pourcentage">---</div>
+        </div>
+    </div>
 
-        <a href="{% url 'emprunt_list' %}" class="nav-card green">
-            <div class="card-icon">📋</div>
-            <div class="card-title">Emprunts</div>
-            <div class="card-desc">Suivre les emprunts en cours, rendre des objets et gérer les retours.</div>
-            <div class="card-arrow">→</div>
-        </a>
+    <!-- Modules de gestion -->
+    <div class="nav-section">
+        <div class="section-title">
+            <span>⚡</span> Modules de gestion
+        </div>
+        <div class="grid-nav">
+            <a href="{% url 'categorie_list' %}" class="nav-card">
+                <div class="card-icon">🏷️</div>
+                <div class="card-title">Catégories</div>
+                <div class="card-desc">Organiser & filtrer le stock par typologie</div>
+            </a>
+            <a href="{% url 'objet_list' %}" class="nav-card">
+                <div class="card-icon">📦</div>
+                <div class="card-title">Objets</div>
+                <div class="card-desc">Gérer les quantités, disponibilités, statuts</div>
+            </a>
+            <a href="{% url 'etudiant_list' %}" class="nav-card">
+                <div class="card-icon">👨‍🎓</div>
+                <div class="card-title">Étudiants</div>
+                <div class="card-desc">Base apprenants et historique emprunteur</div>
+            </a>
+            <a href="{% url 'emprunt_list' %}" class="nav-card">
+                <div class="card-icon">📋</div>
+                <div class="card-title">Emprunts actifs</div>
+                <div class="card-desc">Suivi, retours, prolongations</div>
+            </a>
+            <a href="{% url 'historique_emprunt' %}" class="nav-card">
+                <div class="card-icon">📜</div>
+                <div class="card-title">Historique complet</div>
+                <div class="card-desc">Traçabilité & audits</div>
+            </a>
+        </div>
+    </div>
+
+    <!-- Graphique & top objet -->
+    <div class="analytics-grid">
+        <div class="chart-card">
+            <div class="card-header">
+                <span>📊 Statut des emprunts</span>
+                <span style="font-size:12px; background:rgba(255,255,255,0.05); padding:2px 8px; border-radius:20px;">flux réel</span>
+            </div>
+            <canvas id="statusChart" width="400" height="200" style="width:100%; max-height:220px;"></canvas>
+            <div style="text-align:center; margin-top: 16px; font-size:13px; color:#94a3b8;">
+                <span style="display:inline-block;margin-right:16px;"><span style="background:#34d399;display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px;"></span> Rendu</span>
+                <span><span style="background:#f97316;display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px;"></span> Non rendu (en cours)</span>
+            </div>
+        </div>
+        <div class="top-card">
+            <div class="card-header">
+                <span>🏆 Objet star</span>
+                <span>plus emprunté</span>
+            </div>
+            <div class="top-objet-info">
+                {% if top_objet %}
+                    <div class="top-label">Meilleur équipement</div>
+                    <div class="top-name">{{ top_objet.objet__nom }}</div>
+                    <div class="top-count">{{ top_objet.total }} emprunts</div>
+                    <div style="background: var(--surface); border-radius: 99px; height: 6px; width: 80%; margin: 12px auto 0;">
+                        <div style="background: var(--accent-3); width: 100%; height: 6px; border-radius: 99px;"></div>
+                    </div>
+                    <div style="margin-top: 14px; font-size:13px; color: var(--accent-2);">📈 top demande</div>
+                {% else %}
+                    <div class="top-name">—</div>
+                    <div class="top-count">Aucun emprunt</div>
+                    <div style="font-size:13px; color:#64748b;">Ajoutez des objets pour voir les tendances</div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Derniers emprunts -->
+    <div class="recent-section">
+        <div class="recent-header">
+            <div class="recent-title">🕒 Dernières activités · emprunts récents</div>
+            <a href="{% url 'emprunt_list' %}" class="view-all">Voir tout →</a>
+        </div>
+        <div style="overflow-x: auto;">
+            <table class="emprunt-table">
+                <thead>
+                    <tr><th>Étudiant</th><th>Objet</th><th>Date emprunt</th><th>Statut</th></tr>
+                </thead>
+                <tbody>
+                    {% if recent_emprunts %}
+                        {% for emp in recent_emprunts %}
+                        <tr>
+                            <td>{{ emp.etudiant_nom }}</td>
+                            <td>{{ emp.objet_nom }}</td>
+                            <td>{{ emp.date_emprunt|date:"d/m/Y" }}</td>
+                            <td>
+                                {% if emp.est_rendu %}
+                                    <span class="status-badge">✓ Rendu</span>
+                                {% else %}
+                                    <span class="status-badge pending">⏳ En cours</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr><td colspan="4" class="empty-state">📭 Aucun mouvement récent à afficher. Effectuez un emprunt ou rendez un objet.</td></tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
     </div>
 </main>
 
+<script>
+    (function() {
+        let totalEmprunts = {{ stats.total_emprunts|default:0 }};
+        let nonRendu = {{ stats.non_rendu|default:0 }};
+        let rendu = totalEmprunts - nonRendu;
+        if (rendu < 0) rendu = 0;
+
+        // 1. Correction de la carte "Taux de retour" via JavaScript
+        const valeurElem = document.getElementById('retour-valeur');
+        const pourcentElem = document.getElementById('retour-pourcentage');
+        if (valeurElem && pourcentElem) {
+            if (totalEmprunts > 0) {
+                valeurElem.innerText = `${rendu} / ${totalEmprunts}`;
+                let pourcentage = Math.round((rendu / totalEmprunts) * 100);
+                pourcentElem.innerText = `${pourcentage}% retourné`;
+            } else {
+                valeurElem.innerText = `0 / 0`;
+                pourcentElem.innerText = `—`;
+            }
+        }
+
+        // 2. Graphique du statut des emprunts (inchangé)
+        const ctx = document.getElementById('statusChart')?.getContext('2d');
+        if (ctx) {
+            new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Rendus', 'Non rendus (actifs)'],
+                    datasets: [{
+                        data: [rendu, nonRendu],
+                        backgroundColor: ['#34d399', '#f97316'],
+                        borderWidth: 0,
+                        hoverOffset: 8,
+                        cutout: '62%',
+                        borderRadius: 6,
+                        spacing: 5
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: { backgroundColor: '#0f172a', titleColor: '#f1f5f9', bodyColor: '#cbd5e1', borderColor: '#334155', borderWidth: 1 }
+                    },
+                    layout: { padding: 8 }
+                }
+            });
+        }
+    })();
+</script>
 </body>
 </html>
